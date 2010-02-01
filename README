@@ -1,0 +1,20 @@
+DNS PING v0.7
+1997 Thomas H. Ptacek
+------------------------------------------------------------------------
+
+Included in this distribution is the source code to a DNS "ping" 
+utility, intended to assist in the benchmarking of DNS servers. 
+This code has been compiled and tested under 4.4BSD, including
+FreeBSD 2.x and OpenBSD 2.x.
+
+I have not attempted to port this software to any non-4.4BSD 
+platform. Unlike a previous version, this does not rely on 
+packet capture (don't ask) or forgery (don't ask). It shouldn't
+be too hard to port. If you do manage a port, please send me email.
+
++ Ye gods, I got it to work on Solaris. 
+
+There's a "man" page included with the distribution; read it if
+you have questions as to how this works. 
+
+The author can be contacted at <tqbf@secnet.com>.

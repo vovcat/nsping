@@ -1,0 +1,98 @@
+.Dd October 1997
+.Dt NSPING 8
+.Os BSD 4.4
+.Sh NAME
+.Nm nsping
+.Nd measure reachability and latency of DNS nameservers
+.Sh SYNOPSIS
+.Nm nsping
+.Op Fl drR
+.Op Fl c Ar count
+.Op Fl z Ar zone
+.Op Fl h Ar hostname
+.Op Fl t Ar timer
+.Op Fl p Ar port
+.Op Fl P Ar port
+.Op Fl a Ar address
+.Op Fl T Ar type
+.br
+.Op <address>
+.Sh DESCRIPTION
+.Nm Nsping
+uses DNS queries to monitor reachability and operation of nameservers,
+as well as the latency of DNS queries. It does this by sending random
+recursive DNS queries to the nameserver (avoiding the effects of 
+DNS caching) and measuring the amount of time between the sending 
+of the query and the receipt of the response packet.
+.Pp
+The latency of DNS transactions depends heavily on the data being 
+queried for. The zone within which to query can be specified explicitly
+on the command line, or inferred from the local host. To measure 
+the responsiveness of a nameserver for information it is authoritative
+for, specify one it's zones of authority as this zone.
+.Pp
+To measure basic network latency and DNS processing time, specify
+a hostname on the command line. If this is done, DNS queries sent
+by
+.Nm nsping
+will not be randomized, and nameservice caching will cause the program
+to measure only network+processing time. If latency between the
+first and subsequent queries does not vary greatly, nameservice caching
+may not be enabled on the probed server.
+.Pp
+Finally, a rough estimate of the latency between two sets of nameservers 
+can be measured by querying one of those servers for information within
+a zone authoritative for the other servers. This would be more useful
+if there was a way to specify which of a zone's servers a target server
+queries.
+.Pp
+.Nm Nsping
+recognizes the following options:
+.Bl -tag -width "-ac"
+.It Fl c Ar count
+Total number of DNS queries to send (default infinite).
+.It Fl z Ar zone
+The DNS domain to formulate queries in. 
+.It Fl h Ar hostname
+Do not use random queries, but rather query repeatedly for one
+hostname.
+.It Fl t Ar timespec
+Specify the interval timeout to send packets with, as an 
+expression of seconds.subseconds (ie, 0.5 = half second).
+(default 1 second).
+.It Fl p Ar port
+The remote DNS server port. 
+.It Fl P Ar port
+The local port to send queries from
+.It Fl a Ar address
+The local address from which to send queries.
+.It Fl T Ar type
+The type of information
+to query for (default "a" for Internet "A" record).
+.It Fl d
+Print debugging output (don't do this).
+.It Fl r
+(Redundant) use recursive queries.
+.It Fl R
+Don't use recursive queries.
+.El
+.Sh EXAMPLES
+.Bl -tag -width apply -compacy
+.It Li "nsping ns.victim.com"
+Ping the nameserver "ns.victim.com" until interrupted using
+defaults (random queries, local domain name as zone, etc).
+.It Li "nsping -z internic.net -t .5 ns.victim.com"
+As above, but query for names within the domain "internic.net", 
+and do so every half-second instead of every second.
+.It Li "nsping -h www.yahoo.com ns.victim.com"
+Query repeatedly for "www.yahoo.com" from ns.victim.com.
+.El
+.Sh AUTHOR
+Thomas H. Ptacek, <tqbf@secnet.com>
+.Sh BUGS
+This is embryonic software. If you find a bug, let me know; 
+I won't be surprised, but I will try to fix it for you. =)
+.Sh HISTORY
+Real benchmarking tools can be found at WWW.CAIDA.ORG; this 
+tool is merely inspired from them. 
+

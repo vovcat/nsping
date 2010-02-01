@@ -2,7 +2,7 @@
 #Solaris
 #CFLAGS= -g -Dsys5
 LDFLAGS=
-LIBS=
+LIBS=-lresolv
 #Solaris
 #LIBS= -lnsl -lsocket -lresolv
 TARGET= nsping

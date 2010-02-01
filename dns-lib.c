@@ -1,5 +1,7 @@
 /* !!! Lobotomized for public release */
 
+#include <string.h>
+
 #include "dns-lib.h"
 
 /* create a comple C_IN DNS query packet, suitable for output directly from sendto(),

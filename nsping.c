@@ -10,12 +10,14 @@
 int snprintf(char *, int, char *, ...);
 #endif
 
-#include "nsping.h"
+#include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
 
-
+#define dprintf _dprintf
 #define MAX_ID	65536
+
+#include "nsping.h"
 
 /* store state on sent queries */
 
@@ -60,6 +62,37 @@ int Debug = 0;
 
 char *type_int2string(int type);
 int type_string2int(char *string);
+
+/*
+ * Copy src to string dst of size siz.  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz == 0).
+ * Returns strlen(src); if retval >= siz, truncation occurred.
+ */
+size_t
+strlcpy(char *dst, const char *src, size_t siz)
+{
+	register char *d = dst;
+	register const char *s = src;
+	register size_t n = siz;
+
+	/* Copy as many bytes as will fit */
+	if (n != 0 && --n != 0) {
+		do {
+			if ((*d++ = *s++) == 0)
+				break;
+		} while (--n != 0);
+	}
+
+	/* Not enough room in dst, add NUL and traverse rest of src */
+	if (n == 0) {
+		if (siz != 0)
+			*d = '\0';		/* NUL-terminate dst */
+		while (*s++)
+			;
+	}
+
+	return(s - src - 1);	/* count does not include NUL */
+}
 
 /* -------------------------------------------------------------------------- */
 

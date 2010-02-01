@@ -23,7 +23,7 @@ dns_rr_query(char *name, int type, u_char *buf) {
 
 	len = dns_string(name, dp, MAXDNAME);
 	if(len < 0)
-		return(NULL);
+		return(0);
 
 	dp += len;
 

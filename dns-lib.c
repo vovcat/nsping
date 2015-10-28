@@ -18,10 +18,10 @@ int dns_query(char *name, int type, int recurse, u_char **cp) {
 
       	h = (HEADER *) buffer;
 
-	if(!id) {
+	if (!id) {
 		id = getpid();
 
-		memset(h, 0, sizeof(h));
+		memset(h, 0, sizeof(*h));
 	    
 		h->rd = recurse ? 1 : 0;
 

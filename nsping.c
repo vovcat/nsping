@@ -158,7 +158,8 @@ int main(int argc, char **argv) {
 			break;
 
 		case 'P':
-			strncpy(Local_Port, optarg, sizeof(Local_Port));
+			memset(Local_Port, 0, sizeof(Local_Port));
+			strncpy(Local_Port, optarg, sizeof(Local_Port)-1);
 			break;
 
 		case 'a':
@@ -320,7 +321,6 @@ void probe(int sig) {
 	struct sockaddr_storage si;
 #endif
 	int l;
-	int id;
 	u_char *qp;
 
 	signal(SIGALRM, probe);
@@ -586,7 +586,7 @@ void summarize(int sig) {
 /* wrap timeval_subtract so it returns an answer in milliseconds */
 
 double trip_time(struct timeval *send_time, struct timeval *rcv) {
-	struct timeval tv, *tvp;
+	struct timeval *tvp;
 	double ttime;
 
 	tvp = timeval_subtract(rcv, send_time);
@@ -681,7 +681,6 @@ void dprintf(char *fmt, ...) {
 
 int bind_udp_socket(char *port) {
 	int sockfd;
-	char str[255];
 
 	struct sockaddr_storage sss;
 	struct in6_addr anyaddr = IN6ADDR_ANY_INIT;
@@ -727,7 +726,6 @@ int bind_udp_socket(char *port) {
 struct addrinfo* resolve(char *name, char *port) {
 	struct addrinfo hints, *res, *res0;
 	int error;
-        const char *cause = NULL;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
@@ -785,9 +783,12 @@ char *xstrdup(char *v) {
 #warning "YOUR OPERATING SYSTEM SUCKS."
 
 int snprintf(char *str, int count, char *fmt, ...) {
-	va_list ap;
+	int res = 0;
+        va_list ap;
 	va_start(ap, fmt);
-	return(vsprintf(str, fmt, ap));
+        res = vsprintf(str, fmt, ap);
+        va_end(ap);
+        return res;
 }
 
 #endif

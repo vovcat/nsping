@@ -1,4 +1,5 @@
-#CFLAGS=	-g
+CC=gcc
+CFLAGS=-Wall -Wextra -O2
 #Solaris
 #CFLAGS= -g -Dsys5
 LDFLAGS=

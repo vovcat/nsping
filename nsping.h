@@ -31,7 +31,7 @@ typedef unsigned short u_int16_t;
 #define DEFAULT_SECOND_INTERVAL	1
 #define DEFAULT_USECOND_INTERVAL	0
 
-int guess_zone(void);
+int guess_zone(char *dns_server_name);
 struct timeval *set_timer(char *timearg);
 void probe(int sig);
 int dns_packet(u_char **qp, int id);

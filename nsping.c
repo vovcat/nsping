@@ -186,8 +186,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (!Hostname && !Zone && !guess_zone()) {
-	       	fprintf(stderr, "Unable to determine local DNS zone.\n");
+	if (!Hostname && !Zone && !guess_zone(*argv)) {
+	        fprintf(stderr, "Unable to determine DNS zone for ping.\n");
 		fprintf(stderr, "Fatal error, exiting.\n");
 	       	exit(1);
 	}
@@ -232,23 +232,37 @@ int main(int argc, char **argv)
  * the command line, try to get it from our local host name.
  */
 
-int guess_zone()
+int guess_zone(char *dns_server_name)
 {
 	char lhn[MAXDNAME];
 	struct hostent *hp;
-	char *cp;
+	char *cp = NULL;
 
-	if (gethostname(lhn, MAXDNAME) < 0)
-		return 0;
-	if ((hp = gethostbyname(lhn)) == NULL)
-		return 0;
-	strlcpy(lhn, hp->h_name, sizeof(lhn));
+        // ping the zone of DNS server by default
+	if (getnameinfo(ainfo->ai_addr, ainfo->ai_addrlen,
+                lhn, sizeof(lhn), NULL, 0, NI_NAMEREQD) == 0) {
+            dprintf("getnameinfo %s\n", lhn);
 
-	cp = strchr(lhn, '.');
-	if (!cp || !(*(++cp)))
+            strlcpy(lhn, dns_server_name, sizeof(lhn));
+            cp = strchr(lhn, '.');
+        }
+
+	if (!cp || !cp[1]) {
+            if (gethostname(lhn, sizeof(lhn)) < 0)
+                    return 0;
+
+            if ((hp = gethostbyname(lhn)) == NULL)
+                    return 0;
+
+            strlcpy(lhn, hp->h_name, sizeof(lhn));
+            cp = strchr(lhn, '.');
+        }
+
+	if (!cp || !cp[1])
 		return 0;
 
-	Zone = xstrdup(cp);
+        dprintf("guessed zone %s\n", cp + 1);
+	Zone = xstrdup(cp + 1);
 	return 1;
 }
 

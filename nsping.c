@@ -393,7 +393,7 @@ int dns_packet(u_char **qp, int id)
 		/* random queries (avoid caching) */
 		static int seed = 0;
 		if (!seed) seed = getpid() ^ time(0);
-		snprintf(hname, MAXDNAME, "%ld.%s", random(), Zone);
+		snprintf(hname, MAXDNAME, "%010ld.%s", random(), Zone);
 		name = hname;
 	}
 	dprintf("using name %s\n",name);

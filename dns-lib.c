@@ -1,5 +1,3 @@
-/* !!! Lobotomized for public release */
-
 #include <string.h>
 
 #include "dns-lib.h"
@@ -8,7 +6,8 @@
  * returns the length of the packet and the actual packet (static data) via the "cp" arg
  */
 
-int dns_query(char *name, int type, int recurse, u_char **cp) {
+int dns_query(char *name, int type, int recurse, u_char **cp)
+{
 	static u_char buffer[BUFSIZ];
 	static int id = 0;
 
@@ -22,7 +21,7 @@ int dns_query(char *name, int type, int recurse, u_char **cp) {
 		id = getpid();
 
 		memset(h, 0, sizeof(*h));
-	    
+
 		h->rd = recurse ? 1 : 0;
 
 		h->opcode = QUERY;
@@ -34,10 +33,9 @@ int dns_query(char *name, int type, int recurse, u_char **cp) {
        	h->id = htons(id);
 
 	buf = buffer + sizeof(HEADER);
-	
+
 	i = dns_rr_query(name, type, buf);
 
 	*cp = buffer;
-	return(i + sizeof(HEADER));
+	return i + sizeof(HEADER);
 }
-	

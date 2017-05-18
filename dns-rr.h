@@ -38,8 +38,8 @@ int dns_rr_x_mx(char *, int *, char *, u_char *, u_char *, u_char *);
 int dns_rr_x_ptr(char *, char *, u_char *, u_char *, u_char *);
 int dns_rr_x_cname(char *, char *, u_char *, u_char *, u_char *);
 int dns_rr_x_ns(char *, char *, u_char *, u_char *, u_char *);
-int dns_rr_x_soa(char *, char *, char *, 
-	                u_long *, u_long *, u_long*, u_long *, u_long *, 
+int dns_rr_x_soa(char *, char *, char *,
+	                u_long *, u_long *, u_long*, u_long *, u_long *,
 	                u_char *, u_char *, u_char *);
 
 int dns_rr_x_query(char *, int *, u_char *, u_char *, u_char *);

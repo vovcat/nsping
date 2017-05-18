@@ -1,14 +1,9 @@
-
 /*
  * Nameservice "Ping" - 1997 Thomas H. Ptacek
  *
  * Measure reachability of DNS servers and latency of DNS transactions by sending
  * random DNS queries and measuring response time.
  */
-
-#ifdef sys5
-int snprintf(char *, int, char *, ...);
-#endif
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -68,8 +63,7 @@ int type_string2int(char *string);
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
-size_t
-strlcpy(char *dst, const char *src, size_t siz)
+size_t strlcpy(char *dst, const char *src, size_t siz)
 {
 	register char *d = dst;
 	register const char *s = src;
@@ -91,12 +85,13 @@ strlcpy(char *dst, const char *src, size_t siz)
 			;
 	}
 
-	return(s - src - 1);	/* count does not include NUL */
+	return s - src - 1;	/* count does not include NUL */
 }
 
 /* -------------------------------------------------------------------------- */
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	struct timeval *tvp;
 	struct itimerval itv;
 	u_int32_t address = INADDR_ANY;
@@ -105,7 +100,7 @@ int main(int argc, char **argv) {
 	char c;
 	int i;
 
-	for(i = 0; i < QUERY_BACKLOG; i++) {
+	for (i = 0; i < QUERY_BACKLOG; i++) {
 		Queries[i].id = -1;
 		Queries[i].found = 1;
 	}
@@ -116,7 +111,7 @@ int main(int argc, char **argv) {
 
 #define OPTS "z:h:t:p:dP:a:c:T:rR"
 
-	while((c = getopt(argc, argv, OPTS)) != EOF) {
+	while ((c = getopt(argc, argv, OPTS)) != EOF) {
 		switch(c) {
 		case 'c':
 			Max_Sends = atoi(optarg);
@@ -129,16 +124,15 @@ int main(int argc, char **argv) {
 		case 'z':
 			Zone = xstrdup(optarg);
 			break;
-			
+
 		case 'h':
 			Hostname = xstrdup(optarg);
 			break;
 
 		case 'T':
 			Type = type_string2int(optarg);
-			if(Type == T_NULL)
+			if (Type == T_NULL)
 				Type = atoi(optarg);
-
 			break;
 
 		case 'r':
@@ -151,7 +145,7 @@ int main(int argc, char **argv) {
 
 		case 't':
 			timearg = optarg;
-			break;			
+			break;
 
 		case 'p':
 			Target_Port = xstrdup(optarg);
@@ -166,11 +160,10 @@ int main(int argc, char **argv) {
 #if 0
 			address = resolve(optarg, port);
 #endif
-			if(address == INADDR_NONE) {
+			if (address == INADDR_NONE) {
 				fprintf(stderr, "Unable to resolve local address.\n");
 				exit(1);
 			}
-
 			break;
 
 		default:
@@ -182,7 +175,7 @@ int main(int argc, char **argv) {
 	argc -= optind;
 	argv += optind;
 
-	if(!*argv) {
+	if (!*argv) {
 		usage();
 		exit(1);
 	}
@@ -193,18 +186,18 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if(!Hostname && !Zone && !guess_zone()) {
+	if (!Hostname && !Zone && !guess_zone()) {
 	       	fprintf(stderr, "Unable to determine local DNS zone.\n");
 		fprintf(stderr, "Fatal error, exiting.\n");
 	       	exit(1);
 	}
 
-	if((Sockfd = bind_udp_socket(Local_Port)) < 0) {
+	if ((Sockfd = bind_udp_socket(Local_Port)) < 0) {
 		fprintf(stderr, "Fatal error, exiting.\n");
 		exit(1);
 	}
 
-      	if(!(tvp = set_timer(timearg))) {
+	if (!(tvp = set_timer(timearg))) {
 	      	fprintf(stderr, "Fatal error, exiting.\n");
 		exit(1);
 	}
@@ -223,7 +216,7 @@ int main(int argc, char **argv) {
 			Hostname ? "Hostname" : "Domain",
 			Hostname ? Hostname : Zone,
 			type_int2string(Type));
-			
+
 	probe(0);
        	handle_incoming();
 
@@ -235,35 +228,36 @@ int main(int argc, char **argv) {
 
 /* -------------------------------------------------------------------------- */
 
-/* If we can't ascertain the zone to query in from the information we get on the 
- * command line, try to get it from our local host name.
+/* If we can't ascertain the zone to query in from the information we get on
+ * the command line, try to get it from our local host name.
  */
 
-int guess_zone() {
+int guess_zone()
+{
 	char lhn[MAXDNAME];
 	struct hostent *hp;
 	char *cp;
 
-	if(gethostname(lhn, MAXDNAME) < 0) 
-		return(0);
-	if((hp = gethostbyname(lhn)) == NULL)
-		return(0);
+	if (gethostname(lhn, MAXDNAME) < 0)
+		return 0;
+	if ((hp = gethostbyname(lhn)) == NULL)
+		return 0;
 	strlcpy(lhn, hp->h_name, sizeof(lhn));
 
 	cp = strchr(lhn, '.');
-	if(!cp || !(*(++cp)))
-		return(0);
+	if (!cp || !(*(++cp)))
+		return 0;
 
 	Zone = xstrdup(cp);
-
-	return(1);
+	return 1;
 }
 
 /* -------------------------------------------------------------------------- */
 
 /* parse the timeout (really interval) string we're given on the command line */
 
-struct timeval *set_timer(char *timearg) {
+struct timeval *set_timer(char *timearg)
+{
 	static struct timeval tv;
 	char *cp;
 
@@ -271,34 +265,34 @@ struct timeval *set_timer(char *timearg) {
 
 	/* 1 second interval */
 
-	if(!timearg) {
+	if (!timearg) {
 		tv.tv_sec = DEFAULT_SECOND_INTERVAL;
 		tv.tv_usec = DEFAULT_USECOND_INTERVAL;
-		return(&tv);
+		return &tv;
 	}
 
-	if(!(cp = strchr(timearg, '.'))) {
+	if (!(cp = strchr(timearg, '.'))) {
 		tv.tv_sec = atoi(timearg);
-		return(&tv);
+		return &tv;
 	}
 
 	*cp++ = '\0';
-	
+
 	/* get the seconds */
 
-	if(*timearg) 
+	if (*timearg)
 		tv.tv_sec = atoi(timearg);
 
 	/* figure out how many usec the user meant; everything on the RHS of the
-	 * decimal is a fraction of a second 
+	 * decimal is a fraction of a second
 	 */
 
-	if(*cp) {
+	if (*cp) {
 		int ss = 0;
 		int m = 100000;
 		int i = 0;
 
-		for(; *cp && i < 6; cp++, i++) {
+		for (; *cp && i < 6; cp++, i++) {
 			ss += (*cp - '0') * m;
 			m /= 10;
 		}
@@ -306,26 +300,24 @@ struct timeval *set_timer(char *timearg) {
 		tv.tv_usec = ss;
 	}
 
-	return(&tv);			
+	return &tv;
 }
 
 /* -------------------------------------------------------------------------- */
 
 /* send the DNS queries; this is called as the SIGALRM handler. */
 
-void probe(int sig) {
+void probe(int sig)
+{
 	static int Start = 0;
-	static int Pos    = 0;      
+	static int Pos = 0;
 
-#if 0
-	struct sockaddr_storage si;
-#endif
-	int l;
+	int l = sig;
 	u_char *qp;
 
 	signal(SIGALRM, probe);
 
-	if(!Start) {
+	if (!Start) {
 		Start = getpid() % MAX_ID;
 		dprintf("Start = %d\n", Start);
 	}
@@ -334,7 +326,7 @@ void probe(int sig) {
 	 * to, so at least note that we missed it.
 	 */
 
-	if(!Queries[Pos].found)
+	if (!Queries[Pos].found)
 		Missed++;
 
 	/* get the DNS request */
@@ -343,16 +335,16 @@ void probe(int sig) {
 	l = dns_packet(&qp, (Start + Sent) % MAX_ID);
 
 	do {
-		if(sendto(Sockfd, qp, l, 0, 
+		if (sendto(Sockfd, qp, l, 0,
 			(struct sockaddr *)ainfo->ai_addr,
 			ainfo->ai_addrlen) < 0) {
 
-			if(errno != EINTR) {		
+			if (errno != EINTR) {
 				perror("sendto");
 				return;
 			}
 		}
-	} while(errno == EINTR);
+	} while (errno == EINTR);
 
 	/* if it was sent successfully, update state */
 
@@ -361,62 +353,55 @@ void probe(int sig) {
 	Queries[Pos].found = 0;
 
 	Sent += 1;
-	if(Max_Sends && Sent > Max_Sends) 
+	if (Max_Sends && Sent > Max_Sends)
 		summarize(0);
 
-	if(++Pos == QUERY_BACKLOG) 
+	if (++Pos == QUERY_BACKLOG)
 		Pos = 0;
-
-	return;	
 }
 
 /* -------------------------------------------------------------------------- */
 
 /* create a DNS query for the probe */
 
-int dns_packet(u_char **qp, int id) {
+int dns_packet(u_char **qp, int id)
+{
 	HEADER *hp;
 	u_char *qqp;
 	char hname[MAXDNAME];
 	char *name;
 	int l;
 
-	if(Hostname) 
+	if (Hostname) {
 		/* single static piece of data */
-
 		name = Hostname;
-	else {
+	} else {
 		/* random queries (avoid caching) */
-
 		static int seed = 0;
-		
-		if(!seed) 
-			seed = getpid() ^ time(0);
-		
-		snprintf(hname, MAXDNAME, "%d.%s", random(), Zone);
+		if (!seed) seed = getpid() ^ time(0);
+		snprintf(hname, MAXDNAME, "%ld.%s", random(), Zone);
 		name = hname;
 	}
-	
-	/* build the thing */
+	dprintf("using name %s\n",name);
 
+	/* build the thing */
 	l = dns_query(name, Type, Recurse, &qqp);
 	*qp = qqp;
-	
-	/* fix the ID */
 
+	/* fix the ID */
 	hp = (HEADER *) qqp;
 	hp->id = htons(id);
 
 	/* return the length */
-
-	return(l);
+	return l;
 }
 
 /* -------------------------------------------------------------------------- */
 
 /* deal with incoming DNS response packets */
 
-void handle_incoming() {
+void handle_incoming()
+{
 	u_char buffer[1024];
 #if 0
 	struct sockaddr_in si;
@@ -425,44 +410,40 @@ void handle_incoming() {
 	int sil = sizeof(si);
 	int l;
 
-	for(;;) {
+	for (;;) {
 		do {
-			if((l = recvfrom(Sockfd, buffer, 1024, 0, 
+			if ((l = recvfrom(Sockfd, buffer, 1024, 0,
 				(struct sockaddr *)&si, &sil)) < 0) {
-				if(errno != EINTR) {
+				if (errno != EINTR) {
 					perror("recvfrom");
 					continue;
 				}
 			}
-		} while(errno == EINTR);
+		} while (errno == EINTR);
 
 		/* descriminate real responses from spurious crud */
-
 #if 0
-		if(si.sin_addr.s_addr != Target_Address) {
+		if (si.sin_addr.s_addr != Target_Address) {
 			dprintf("Received packet from unexpected address %s.\n",
 				inet_ntoa(si.sin_addr));
 			continue;
 		}
 
-		if(si.sin_port != htons(Target_Port)) {
+		if (si.sin_port != htons(Target_Port)) {
 			dprintf("Received packet from unexpected port %d.\n",
 				ntohs(si.sin_port));
 			continue;
 		}
 #endif
 
-		if(l < sizeof(HEADER)) {
+		if (l < sizeof(HEADER)) {
 			dprintf("Short packet.\n");
 			continue;
 		}
-		
-		/* track the response */
 
+		/* track the response */
 		update(buffer, l);
 	}
-
-	return;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -471,7 +452,8 @@ void handle_incoming() {
  * latency stats.
  */
 
-void update(u_char *bp, int l) {
+void update(u_char *bp, int l)
+{
 	static int Start = 0;
 	static int Stuck = 0;
 
@@ -481,39 +463,39 @@ void update(u_char *bp, int l) {
 	int delta;
 	double triptime;
 
-	if(!Start)
+	if (!Start)
 		Start = getpid() % MAX_ID;
 
 	gettimeofday(&tv, NULL);
 
 	/* see if it's one of ours... */
-	
-	for(i = 0; i < QUERY_BACKLOG; i++) 
-		if(ntohs(hp->id) == Queries[i].id)
+
+	for (i = 0; i < QUERY_BACKLOG; i++)
+		if (ntohs(hp->id) == Queries[i].id)
 			break;
 
-	if(i == QUERY_BACKLOG) {
+	if (i == QUERY_BACKLOG) {
 		dprintf("Packet with id %d not ours.\n", ntohs(hp->id));
 		return;
-	} else 
-		Queries[i].found = 1;	
+	} else
+		Queries[i].found = 1;
 
 	/* figure out which query this was, using the DNS query ID */
 	dprintf("received with id = %d\n", ntohs(hp->id));
 	delta = ntohs(hp->id) - Start;
 	dprintf("delta = %d - %d = %d\n", ntohs(hp->id), Start, delta);
-	
+
 	/* figure out how long it took */
 
 	triptime = trip_time(&Queries[i].sent, &tv);
 
 	/* update Ave/Max/Min */
 
-	if(triptime > Max)
+	if (triptime > Max)
 		Max = triptime;
-	
-	if(!Count || triptime < Min)
-		Min = triptime;            
+
+	if (!Count || triptime < Min)
+		Min = triptime;
 
 	Count++;
 
@@ -524,25 +506,25 @@ void update(u_char *bp, int l) {
 	 * queries).
 	 */
 
-	if(!Ave) 
+	if (!Ave) {
 		Ave = triptime;
-	else {
+	} else {
 		double n;
 
 		/* Lose the highest sample after 10 queries */
 
-		if(delta == 10 && Stuck != 2) {
+		if (delta == 10 && Stuck != 2) {
 			Ave = ((Ave * 10) - Max) / 9;
 			Count--;
 			Stuck++;
 		}
 
-		/* discard queries that are twice as large as the 
+		/* discard queries that are twice as large as the
 		 * average - assume these to be anomalies caused
 		 * by network instability
 		 */
 
-		if(delta > 10 && triptime > (Ave * 2)) {
+		if (delta > 10 && triptime > (Ave * 2)) {
 			Count--;
 			Lagged++;
 		} else {
@@ -556,21 +538,18 @@ void update(u_char *bp, int l) {
 	printf("%s [ %3d ] %5d bytes from %s: %8.3f ms [ %8.3f san-avg ]\n",
 	       hp->rcode == NOERROR ? "+" : "-",
 	       delta,
-	       l, 
+	       l,
 	       addr_string,
 	       triptime,
 	       delta ? Ave : 0.0);
-
-	return;
 }
 
 /* -------------------------------------------------------------------------- */
-
 /* print the final results */
 
-void summarize(int sig) {
-	printf(
-	       "\n"
+void summarize(int sig)
+{
+	printf("\n"
 	       "Total Sent: [ %3d ] Total Received: [ %3d ] Missed: [ %3d ] Lagged [ %3d ]\n"
 	       "Ave/Max/Min: %8.3f / %8.3f / %8.3f\n",
 	       Sent, Count, Missed ? Missed : Sent - Count, Lagged, Ave, Max, Min);
@@ -582,45 +561,44 @@ void summarize(int sig) {
 }
 
 /* -------------------------------------------------------------------------- */
-
 /* wrap timeval_subtract so it returns an answer in milliseconds */
 
-double trip_time(struct timeval *send_time, struct timeval *rcv) {
+double trip_time(struct timeval *send_time, struct timeval *rcv)
+{
 	struct timeval *tvp;
 	double ttime;
 
 	tvp = timeval_subtract(rcv, send_time);
-        
+
 	ttime  = ((double)tvp->tv_sec) * 1000.0 +
 		((double)tvp->tv_usec) / 1000.0;
-        
-	return(ttime);
+
+	return ttime;
 }
 
 /* -------------------------------------------------------------------------- */
-
 /* return a timeval struct representing the difference between "out" and "in" */
 
-struct timeval *timeval_subtract(struct timeval *out, struct timeval *in) {
-	static struct timeval tm;       
+struct timeval *timeval_subtract(struct timeval *out, struct timeval *in)
+{
+	static struct timeval tm;
 	long diff;
 
 	diff = out->tv_usec - in->tv_usec;
-        
-	if(diff < 0) {
+
+	if (diff < 0) {
 		diff = diff + 1000000;
 		out->tv_sec = out->tv_sec - 1;
 	}
-        
+
 	tm.tv_usec = diff;
 	diff = out->tv_sec - in->tv_sec;
 	tm.tv_sec = diff;
 
-	return(&tm);
+	return &tm;
 }
 
 /* -------------------------------------------------------------------------- */
-
 /* map integer type codes to names, v/vrsa. Add new types here if you must. */
 
 struct type2str {
@@ -638,48 +616,47 @@ struct type2str {
 	{ NULL, 	-1		},
 };
 
-char *type_int2string(int type) {
+char *type_int2string(int type)
+{
 	struct type2str *ts = Typetable;
 	int i;
-	
-	for(i = 0; ts[i].name; i++) 
-		if(ts[i].type == type)
-			return(ts[i].name);
 
-	return("unknown");
+	for (i = 0; ts[i].name; i++)
+		if (ts[i].type == type)
+			return ts[i].name;
+
+	return "unknown";
 }
 
-int type_string2int(char *string) {
+int type_string2int(char *string)
+{
 	struct type2str *ts = Typetable;
 	int i;
 
-	for(i = 0; ts[i].name; i++)
-		if(!strcasecmp(string, ts[i].name))
-			return(ts[i].type);
+	for (i = 0; ts[i].name; i++)
+		if (!strcasecmp(string, ts[i].name))
+			return ts[i].type;
 
-	return(T_NULL);
+	return T_NULL;
 }
 
 /* -------------------------------------------------------------------------- */
-
 /* don't print if we're not in debug mode */
 
-void dprintf(char *fmt, ...) {
+void dprintf(char *fmt, ...)
+{
 	va_list ap;
-
-	if(!Debug)
-		return;
-
+	if (!Debug) return;
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
-
-	return;
+	va_end(ap);
 }
 
 
 /* return a bound UDP socket */
 
-int bind_udp_socket(char *port) {
+int bind_udp_socket(char *port)
+{
 	int sockfd;
 
 	struct sockaddr_storage sss;
@@ -690,7 +667,7 @@ int bind_udp_socket(char *port) {
 	                ainfo->ai_protocol);
 	if (sockfd < 0) {
 		perror("socket");
-		return(-1);
+		return -1;
 	}
 
 	memset(&sss, 0, sizeof(sss));
@@ -710,20 +687,19 @@ int bind_udp_socket(char *port) {
 		break;
 	}
 
-	if(bind(sockfd, (struct sockaddr *)&sss, addrlen) < 0)
-	{
+	if (bind(sockfd, (struct sockaddr *)&sss, addrlen) < 0) {
 		perror("bind");
-		return(-1);
+		return -1;
 	}
 
-	return(sockfd);
+	return sockfd;
 }
 
 /* -------------------------------------------------------------------------- */
-
 /* wrap hostname resolution */
 
-struct addrinfo* resolve(char *name, char *port) {
+struct addrinfo* resolve(char *name, char *port)
+{
 	struct addrinfo hints, *res, *res0;
 	int error;
 
@@ -732,64 +708,43 @@ struct addrinfo* resolve(char *name, char *port) {
 	hints.ai_socktype = SOCK_DGRAM;
         error = getaddrinfo(name, port, &hints, &res0);
 	if (error) {
-	  errx(1, "%s", gai_strerror(error));
-	  return(NULL);
+            errx(1, "%s", gai_strerror(error));
+            return NULL;
 	}
 
 	res = res0;
 	switch (res->ai_family) {
 	    case AF_INET:
-#if 0
-		sin_addr = (struct
-#endif
 		inet_ntop(res->ai_family,
 			&(((struct sockaddr_in *)(res->ai_addr))->sin_addr),
 			addr_string, sizeof(addr_string));
-		printf("%s\n", addr_string);
 		break;
 	    case AF_INET6:
-#if 0
-		sin6_addr =
-#endif
 		inet_ntop(res->ai_family,
 			&(((struct sockaddr_in6 *)(res->ai_addr))->sin6_addr),
 			addr_string, sizeof(addr_string));
 		break;
 	    default:
-		return(NULL);
+		return NULL;
 		break;
 	}
 
-	return(res);
+	return res;
 }
 
 
 /* don't ever return NULL */
 
-char *xstrdup(char *v) {
+char *xstrdup(char *v)
+{
 	char *c = strdup(v);
 	assert(c);
-	return(c);
+	return c;
 }
 
 /* -------------------------------------------------------------------------- */
 
- void usage() {
-	 fprintf(stderr, "Usage: nsping [-dR] [-c count] [-z zone | -h hostname] [-t timeout] [-p dport] [-P sport] [-a saddr] [-T querytype]\n");
-	 return;
- }
-
-#ifdef sys5
-#warning "YOUR OPERATING SYSTEM SUCKS."
-
-int snprintf(char *str, int count, char *fmt, ...) {
-	int res = 0;
-        va_list ap;
-	va_start(ap, fmt);
-        res = vsprintf(str, fmt, ap);
-        va_end(ap);
-        return res;
+void usage()
+{
+	fprintf(stderr, "Usage: nsping [-dR] [-c count] [-z zone | -h hostname] [-t timeout] [-p dport] [-P sport] [-a saddr] [-T querytype]\n");
 }
-
-#endif
-

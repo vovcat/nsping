@@ -1,4 +1,3 @@
-
 #ifndef DNS_RR_INCLUDED
 #define DNS_RR_INCLUDED
 
@@ -52,4 +51,3 @@ u_char *dns_skip(u_char *, u_char *);
 int dns_string(char *, u_char *, int);
 
 #endif
-

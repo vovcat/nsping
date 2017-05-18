@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "dns-rr.h"
 #include "dns-lib.h"
 
 /* create a comple C_IN DNS query packet, suitable for output directly from sendto(),
@@ -15,7 +16,7 @@ int dns_query(char *name, int type, int recurse, u_char **cp)
 	u_char *buf;
 	int i;
 
-      	h = (HEADER *) buffer;
+	h = (HEADER *) buffer;
 
 	if (!id) {
 		id = getpid();
@@ -30,12 +31,11 @@ int dns_query(char *name, int type, int recurse, u_char **cp)
 		id++;
 	}
 
-       	h->id = htons(id);
-
+	h->id = htons(id);
 	buf = buffer + sizeof(HEADER);
 
 	i = dns_rr_query(name, type, buf);
 
 	*cp = buffer;
-	return i + sizeof(HEADER);
+	return i + (int)sizeof(HEADER);
 }

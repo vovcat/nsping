@@ -20,4 +20,3 @@ int dns_req_mx(char *, u_char **, int);
 int dns_req_soa(char *, u_char **, int);
 
 #endif
-

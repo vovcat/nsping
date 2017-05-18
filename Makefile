@@ -1,7 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -O2
-#Solaris
-#CFLAGS= -g -Dsys5
+CFLAGS=-g3 -Og -Wall -Wextra -Wformat=1 -fdelete-null-pointer-checks -Wnull-dereference -Wuninitialized -fstrict-aliasing -Wstrict-aliasing -fstrict-overflow -Wstrict-overflow=4 -Wsuggest-attribute=format -Wmissing-format-attribute -Wsuggest-final-types -Wsuggest-final-methods -ftree-vrp -Warray-bounds -Wduplicated-cond -Wfloat-equal -Wundef -Wshadow -Wframe-larger-than=8192 -Wstack-usage=8192 -funsafe-loop-optimizations -Wunsafe-loop-optimizations -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wsign-conversion -Wfloat-conversion -Wlogical-op -Wmissing-field-initializers -Wredundant-decls -Wdisabled-optimization
 LDFLAGS=
 LIBS=-lresolv
 #Solaris

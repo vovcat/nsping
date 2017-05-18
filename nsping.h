@@ -31,7 +31,7 @@ typedef unsigned short u_int16_t;
 #define DEFAULT_SECOND_INTERVAL	1
 #define DEFAULT_USECOND_INTERVAL	0
 
-int guess_zone(char *dns_server_name);
+int guess_zone(const char *dns_server_name);
 struct timeval *set_timer(char *timearg);
 void probe(int sig);
 int dns_packet(u_char **qp, int id);
@@ -41,9 +41,9 @@ void summarize(int);
 double trip_time(struct timeval *send_time, struct timeval *rcv);
 struct timeval *timeval_subtract(struct timeval *out, struct timeval *in);
 int bind_udp_socket(char *port);
-void dprintf(char *fmt, ...);
+void dprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void usage(void);
-char *xstrdup(char *v);
-struct addrinfo *resolve(char *name, char *port);
+char *xstrdup(const char *v);
+struct addrinfo *resolve(const char *name, const char *port);
 
 #endif

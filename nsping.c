@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <err.h> // errx()
 
 #define dprintf _dprintf
 #define MAX_ID	65536
@@ -55,8 +56,8 @@ double Min 		= 0.0;
 
 int Debug = 0;
 
-char *type_int2string(int type);
-int type_string2int(char *string);
+const char *type_int2string(int type);
+int type_string2int(const char *string);
 
 /*
  * Copy src to string dst of size siz.  At most siz-1 characters
@@ -65,9 +66,9 @@ int type_string2int(char *string);
  */
 size_t strlcpy(char *dst, const char *src, size_t siz)
 {
-	register char *d = dst;
-	register const char *s = src;
-	register size_t n = siz;
+	char *d = dst;
+	const char *s = src;
+	size_t n = siz;
 
 	/* Copy as many bytes as will fit */
 	if (n != 0 && --n != 0) {
@@ -85,7 +86,7 @@ size_t strlcpy(char *dst, const char *src, size_t siz)
 			;
 	}
 
-	return s - src - 1;	/* count does not include NUL */
+	return (size_t)(s - src) - 1;	/* count does not include NUL */
 }
 
 /* -------------------------------------------------------------------------- */
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
 	u_int32_t address = INADDR_ANY;
 	char Local_Port[6];
 	char *timearg = NULL;
-	char c;
+	int c;
 	int i;
 
 	for (i = 0; i < QUERY_BACKLOG; i++) {
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
 			type_int2string(Type));
 
 	probe(0);
-       	handle_incoming();
+	handle_incoming();
 
 	/* should never get here */
 
@@ -232,7 +233,7 @@ int main(int argc, char **argv)
  * the command line, try to get it from our local host name.
  */
 
-int guess_zone(char *dns_server_name)
+int guess_zone(const char *dns_server_name)
 {
 	char lhn[MAXDNAME];
 	struct hostent *hp;
@@ -326,7 +327,7 @@ void probe(int sig)
 	static int Start = 0;
 	static int Pos = 0;
 
-	int l = sig;
+	int slen = sig;
 	u_char *qp;
 
 	signal(SIGALRM, probe);
@@ -346,11 +347,10 @@ void probe(int sig)
 	/* get the DNS request */
 
 	dprintf("sending with id = %d\n", (Start + Sent) % MAX_ID);
-	l = dns_packet(&qp, (Start + Sent) % MAX_ID);
+	slen = dns_packet(&qp, (Start + Sent) % MAX_ID);
 
-	do {
-		if (sendto(Sockfd, qp, l, 0,
-			(struct sockaddr *)ainfo->ai_addr,
+	if (slen > 0) do {
+		if (sendto(Sockfd, qp, (size_t)slen, 0, ainfo->ai_addr,
 			ainfo->ai_addrlen) < 0) {
 
 			if (errno != EINTR) {
@@ -384,7 +384,7 @@ int dns_packet(u_char **qp, int id)
 	u_char *qqp;
 	char hname[MAXDNAME];
 	char *name;
-	int l;
+	int slen;
 
 	if (Hostname) {
 		/* single static piece of data */
@@ -399,7 +399,7 @@ int dns_packet(u_char **qp, int id)
 	dprintf("using name %s\n",name);
 
 	/* build the thing */
-	l = dns_query(name, Type, Recurse, &qqp);
+	slen = dns_query(name, Type, Recurse, &qqp);
 	*qp = qqp;
 
 	/* fix the ID */
@@ -407,7 +407,7 @@ int dns_packet(u_char **qp, int id)
 	hp->id = htons(id);
 
 	/* return the length */
-	return l;
+	return slen;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -421,12 +421,12 @@ void handle_incoming()
 	struct sockaddr_in si;
 #endif
 	struct sockaddr_storage si;
-	int sil = sizeof(si);
-	int l;
+	socklen_t sil = sizeof(si);
+	ssize_t slen;
 
 	for (;;) {
 		do {
-			if ((l = recvfrom(Sockfd, buffer, 1024, 0,
+			if ((slen = recvfrom(Sockfd, buffer, 1024, 0,
 				(struct sockaddr *)&si, &sil)) < 0) {
 				if (errno != EINTR) {
 					perror("recvfrom");
@@ -450,13 +450,13 @@ void handle_incoming()
 		}
 #endif
 
-		if (l < sizeof(HEADER)) {
+		if (slen < (int)sizeof(HEADER)) {
 			dprintf("Short packet.\n");
 			continue;
 		}
 
 		/* track the response */
-		update(buffer, l);
+		update(buffer, slen);
 	}
 }
 
@@ -466,7 +466,7 @@ void handle_incoming()
  * latency stats.
  */
 
-void update(u_char *bp, int l)
+void update(u_char *bp, int slen)
 {
 	static int Start = 0;
 	static int Stuck = 0;
@@ -520,7 +520,7 @@ void update(u_char *bp, int l)
 	 * queries).
 	 */
 
-	if (!Ave) {
+	if (Ave < 0.000001) {
 		Ave = triptime;
 	} else {
 		double n;
@@ -542,7 +542,7 @@ void update(u_char *bp, int l)
 			Count--;
 			Lagged++;
 		} else {
-			n = (double) Ave * (Count - 1);
+			n = Ave * (Count - 1);
 			n += triptime;
 
 			Ave = n / Count;
@@ -552,7 +552,7 @@ void update(u_char *bp, int l)
 	printf("%s [ %3d ] %5d bytes from %s: %8.3f ms [ %8.3f san-avg ]\n",
 	       hp->rcode == NOERROR ? "+" : "-",
 	       delta,
-	       l,
+	       slen,
 	       addr_string,
 	       triptime,
 	       delta ? Ave : 0.0);
@@ -563,6 +563,8 @@ void update(u_char *bp, int l)
 
 void summarize(int sig)
 {
+	(void)sig; // silence unused parameter 'sig' warning
+
 	printf("\n"
 	       "Total Sent: [ %3d ] Total Received: [ %3d ] Missed: [ %3d ] Lagged [ %3d ]\n"
 	       "Ave/Max/Min: %8.3f / %8.3f / %8.3f\n",
@@ -616,7 +618,7 @@ struct timeval *timeval_subtract(struct timeval *out, struct timeval *in)
 /* map integer type codes to names, v/vrsa. Add new types here if you must. */
 
 struct type2str {
-	char *name;
+	const char *name;
 	int type;
 } Typetable[] = {
 	{ "A", 		T_A 		},
@@ -630,7 +632,7 @@ struct type2str {
 	{ NULL, 	-1		},
 };
 
-char *type_int2string(int type)
+const char *type_int2string(int type)
 {
 	struct type2str *ts = Typetable;
 	int i;
@@ -642,7 +644,7 @@ char *type_int2string(int type)
 	return "unknown";
 }
 
-int type_string2int(char *string)
+int type_string2int(const char *string)
 {
 	struct type2str *ts = Typetable;
 	int i;
@@ -657,7 +659,7 @@ int type_string2int(char *string)
 /* -------------------------------------------------------------------------- */
 /* don't print if we're not in debug mode */
 
-void dprintf(char *fmt, ...)
+void dprintf(const char *fmt, ...)
 {
 	va_list ap;
 	if (!Debug) return;
@@ -675,7 +677,7 @@ int bind_udp_socket(char *port)
 
 	struct sockaddr_storage sss;
 	struct in6_addr anyaddr = IN6ADDR_ANY_INIT;
-	socklen_t               addrlen;
+	socklen_t addrlen = 0;
 
 	sockfd = socket(ainfo->ai_family, ainfo->ai_socktype,
 	                ainfo->ai_protocol);
@@ -687,18 +689,18 @@ int bind_udp_socket(char *port)
 	memset(&sss, 0, sizeof(sss));
 	switch (ainfo->ai_family) {
 	    case AF_INET:
-		(((struct sockaddr_in *)(&sss))->sin_addr).s_addr = INADDR_ANY;
-		((struct sockaddr_in *)(&sss))->sin_port = htons(atoi(port));
-		((struct sockaddr_in *)(&sss))->sin_family = AF_INET;
-		addrlen = sizeof(struct sockaddr_in);
-		break;
+			(((struct sockaddr_in *)(&sss))->sin_addr).s_addr = INADDR_ANY;
+			((struct sockaddr_in *)(&sss))->sin_port = htons(atoi(port));
+			((struct sockaddr_in *)(&sss))->sin_family = AF_INET;
+			addrlen = sizeof(struct sockaddr_in);
+			break;
 
 	    case AF_INET6:
-		((struct sockaddr_in6 *)(&sss))->sin6_addr = anyaddr;
-		((struct sockaddr_in6 *)(&sss))->sin6_port = htons(atoi(port));
-		((struct sockaddr_in6 *)(&sss))->sin6_family = AF_INET6;
-		addrlen = sizeof(struct sockaddr_in6);
-		break;
+			((struct sockaddr_in6 *)(&sss))->sin6_addr = anyaddr;
+			((struct sockaddr_in6 *)(&sss))->sin6_port = htons(atoi(port));
+			((struct sockaddr_in6 *)(&sss))->sin6_family = AF_INET6;
+			addrlen = sizeof(struct sockaddr_in6);
+			break;
 	}
 
 	if (bind(sockfd, (struct sockaddr *)&sss, addrlen) < 0) {
@@ -712,7 +714,7 @@ int bind_udp_socket(char *port)
 /* -------------------------------------------------------------------------- */
 /* wrap hostname resolution */
 
-struct addrinfo* resolve(char *name, char *port)
+struct addrinfo* resolve(const char *name, const char *port)
 {
 	struct addrinfo hints, *res, *res0;
 	int error;
@@ -749,7 +751,7 @@ struct addrinfo* resolve(char *name, char *port)
 
 /* don't ever return NULL */
 
-char *xstrdup(char *v)
+char *xstrdup(const char *v)
 {
 	char *c = strdup(v);
 	assert(c);
